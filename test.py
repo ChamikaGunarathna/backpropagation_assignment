@@ -25,7 +25,7 @@ def cross_entropy_loss_derivative(y_true, y_pred):
     return y_pred - y_true
 
 # One-hot encoding for labels
-def one_hot_encode(y, num_classes):
+def one_hot_encode(y, num_classes=4):
     one_hot = np.zeros((y.size, num_classes))
     one_hot[np.arange(y.size), y] = 1
     return one_hot
@@ -83,6 +83,7 @@ class NeuralNetwork:
         loss = cross_entropy_loss(Y, y_pred)
         # Backward pass
         self.backward(X, Y, y_pred, learning_rate)
+        return loss
 
 def main():
     # Sample data
@@ -90,10 +91,20 @@ def main():
     X_train = np.random.randn(100, 14)  # 100 samples, 14 features
     y_train = np.random.randint(0, 4, size=100)  # 100 labels for 4 classes
     y_train = one_hot_encode(y_train, 4)
+    
+    # Initialize neural network
+    nn = NeuralNetwork(input_size=14, hidden_size1=100, hidden_size2=40, output_size=4)
 
-    # Initialize and train the neural network
-    nn = NeuralNetwork()
-    nn.train(X_train, y_train, learning_rate=0.1, iterations=1000)
-
+    # Training loop with step function
+    learning_rate = 0.1
+    iterations = 1000
+    for i in range(iterations):
+        # Perform one step of training
+        loss = nn.step(X_train, y_train, learning_rate)
+        
+        # Print loss every 100 iterations
+        if i % 100 == 0:
+            print(f"Iteration {i}, loss: {loss}")
+    
 if __name__ == "__main__":
     main()
