@@ -1,2 +1,3 @@
-# backpropagation_assignment
-An assignment  for a module in my MSc
+# Backpropagation Assignment
+
+An assignment  for a module in my MSc. For more details read the PDF.
