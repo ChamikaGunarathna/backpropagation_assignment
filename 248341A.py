@@ -154,6 +154,7 @@ class NeuralNetwork:
             costs.append(loss)
         return costs
     
+    # Predict (sake of completeness)
     def predict(self,X_train):
         y_pred = self.forward(X=X_train)
         return np.argmax(y_pred, axis=1)
@@ -161,7 +162,6 @@ class NeuralNetwork:
 '''
 Task_1
 '''
-
 # datapoint.txt content
 # This is the 14 dimension datapoint X:
 X=[-1, 1, 1, 1, -1, -1, 1, -1, 1, 1, -1, -1, 1, 1]
