@@ -29,6 +29,7 @@ def cross_entropy_loss_derivative(y_true, y_pred):
 
 # One-hot encoding for labels
 def one_hot_encode(y, num_classes=4):
+    y = np.array(y).flatten()
     one_hot = np.zeros((y.size, num_classes), dtype=np.float32)
     one_hot[np.arange(y.size), y] = 1
     return one_hot
@@ -139,6 +140,22 @@ class NeuralNetwork:
                 writer.writerow(i.flatten())
             for i in self.dw3:
                 writer.writerow(i.flatten())
+    
+    def train(self,X_train,Y_train,iteration : int, learning_rate: float):
+        costs = []
+        for i in range(iteration):
+            loss = self.step(
+                X=X_train,
+                Y=Y_train,
+                learning_rate=learning_rate
+                )
+            print(f"For iteration {i+1} the loss is {loss}")
+            costs.append(loss)
+        return costs
+
+'''
+Task_1
+'''
 
 # datapoint.txt content
 # This is the 14 dimension datapoint X:
@@ -178,3 +195,23 @@ _ = nn.step(X=x,Y=y,learning_rate=0.01)
 
 # Saving the results to csv files
 nn.write_gradients_to_csv(w_name="dw.csv",b_name="db.csv")
+
+'''
+Task_2
+'''
+# Train dataset
+x_train = pd.read_csv('Task_2/x_train.csv',header=None).to_numpy(dtype=np.float32)
+y_train = pd.read_csv('Task_2/y_train.csv',header=None).to_numpy()
+y_train = one_hot_encode(y_train).astype(np.float32)
+# Test dataset
+x_test = pd.read_csv('Task_2/x_test.csv',header=None).to_numpy(dtype=np.float32)
+y_test = pd.read_csv('Task_2/y_test.csv',header=None).to_numpy()
+y_test = one_hot_encode(y_test).astype(np.float32)
+
+nn = NeuralNetwork()
+costs = nn.train(
+    X_train=x_train,
+    Y_train=y_train,
+    iteration=1000,
+    learning_rate=0.1,
+    )
