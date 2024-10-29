@@ -141,6 +141,7 @@ class NeuralNetwork:
             for i in self.dw3:
                 writer.writerow(i.flatten())
     
+    # Train the function for a given iteration and using a given learning rate
     def train(self,X_train,Y_train,iteration : int, learning_rate: float):
         costs = []
         for i in range(iteration):
@@ -152,6 +153,10 @@ class NeuralNetwork:
             print(f"For iteration {i+1} the loss is {loss}")
             costs.append(loss)
         return costs
+    
+    def predict(self,X_train):
+        y_pred = self.forward(X=X_train)
+        return np.argmax(y_pred, axis=1)
 
 '''
 Task_1
