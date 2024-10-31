@@ -34,45 +34,43 @@ def one_hot_encode(y, num_classes=4):
     one_hot[np.arange(y.size), y] = 1
     return one_hot
 
-# Assign custom weights and return a neurat network instance
-def assign_custom_weights(weights_df,biases_df):
-    # Split weights and biases, rows are hard coded from the .csv files
-    weights = {
-        "w1": weights_df.iloc[:14, 1:101].values.astype(np.float32),
-        "w2": weights_df.iloc[14:114, 1:41].values.astype(np.float32),
-        "w3": weights_df.iloc[114:, 1:5].values.astype(np.float32),
-    }
-
-    biases = {
-        "b1": biases_df.iloc[0, 1:101].values.astype(np.float32),
-        "b2": biases_df.iloc[1, 1:41].values.astype(np.float32),
-        "b3": biases_df.iloc[2, 1:5].values.astype(np.float32),
-    }
-
-    # Create an instance of the network and assigning the gives biases
-    nn = NeuralNetwork()
-    # assigning given weights
-    nn.w1 = weights['w1']
-    nn.w2 = weights['w2']
-    nn.w3 = weights['w3']
-    # assigning given biases
-    nn.b1 = biases['b1'].reshape(1, -1).astype(np.float32)
-    nn.b2 = biases['b2'].reshape(1, -1).astype(np.float32)
-    nn.b3 = biases['b3'].reshape(1, -1).astype(np.float32)
-    
-    return nn
-
 # Neural Network class
 class NeuralNetwork:
     def __init__(self, input_size=14, hidden_size1=100, hidden_size2=40, output_size=4):
-        # Initialize weights and biases
+        # Setting the seed for reproducibility
+        np.random.seed(42)
+        # Initializing weights and biases
         self.w1 = np.random.randn(input_size, hidden_size1).astype(np.float32)
         self.b1 = np.zeros((1, hidden_size1), dtype=np.float32)
         self.w2 = np.random.randn(hidden_size1, hidden_size2).astype(np.float32)
         self.b2 = np.zeros((1, hidden_size2), dtype=np.float32)
         self.w3 = np.random.randn(hidden_size2, output_size).astype(np.float32)
         self.b3 = np.zeros((1, output_size), dtype=np.float32)
+        
+    # Assign custom weights and return a neurat network instance
+    def assign_custom_weights(self, weights_df:pd.DataFrame,biases_df:pd.DataFrame):
+        # Split weights and biases, rows are hard coded from the .csv files
+        weights = {
+            "w1": weights_df.iloc[:14, 1:101].values.astype(np.float32),
+            "w2": weights_df.iloc[14:114, 1:41].values.astype(np.float32),
+            "w3": weights_df.iloc[114:, 1:5].values.astype(np.float32),
+        }
 
+        biases = {
+            "b1": biases_df.iloc[0, 1:101].values.astype(np.float32),
+            "b2": biases_df.iloc[1, 1:41].values.astype(np.float32),
+            "b3": biases_df.iloc[2, 1:5].values.astype(np.float32),
+        }
+
+        # assigning given weights
+        self.w1 = weights['w1']
+        self.w2 = weights['w2']
+        self.w3 = weights['w3']
+        # assigning given biases
+        self.b1 = biases['b1'].reshape(1, -1).astype(np.float32)
+        self.b2 = biases['b2'].reshape(1, -1).astype(np.float32)
+        self.b3 = biases['b3'].reshape(1, -1).astype(np.float32)
+    
     # Forward propagation
     def forward(self, X):
         X = X.astype(np.float32)
@@ -84,7 +82,7 @@ class NeuralNetwork:
         self.a3 = softmax(self.z3)
         return self.a3
 
-    # Backpropagation
+    # Backward propagation
     def backward(self, X, y_true, y_pred, learning_rate):
         X, y_true, y_pred = X.astype(np.float32), y_true.astype(np.float32), y_pred.astype(np.float32)
         m = y_true.shape[0]
@@ -101,7 +99,7 @@ class NeuralNetwork:
         self.dw1 = (np.dot(X.T, self.dz1) / np.float32(m)).astype(np.float32)
         self.db1 = (np.sum(self.dz1, axis=0, keepdims=True) / np.float32(m)).astype(np.float32)
 
-        # Update weights and biases
+        # Updating weights and biases
         self.w3 -= learning_rate * self.dw3
         self.b3 -= learning_rate * self.db3
         self.w2 -= learning_rate * self.dw2
@@ -120,7 +118,7 @@ class NeuralNetwork:
         self.backward(X, Y, y_pred, learning_rate)
         return loss
     
-    # Write gradients to csv files
+    # Writing gradients to csv files
     def write_gradients_to_csv(self,w_name:str,b_name:str):
         '''w_name and b_name shoudl end with .csv
         '''
@@ -131,7 +129,7 @@ class NeuralNetwork:
             writer.writerow(self.db2.flatten())
             writer.writerow(self.db3.flatten())
         
-        # Save the array as a single row in a CSV file
+        # Save gradients for weights
         with open(w_name, "w", newline="") as csvfile:
             writer = csv.writer(csvfile)
             for i in self.dw1:
@@ -181,21 +179,28 @@ weights_df = pd.read_csv('Task_1/a/W.csv', header=None)
 biases_df = pd.read_csv('Task_1/a/b.csv', header=None)
 
 # Running for a single step (learning rate do not matter for Task1)
-nn = assign_custom_weights(weights_df,biases_df)
+nn = NeuralNetwork()
+nn.assign_custom_weights(
+    weights_df=weights_df,
+    biases_df=biases_df
+    )
 _ = nn.step(X=x,Y=y,learning_rate=0.01)
 
 # Saving the results to csv files
-# nn.write_gradients_to_csv(w_name="pred_dw.csv",b_name="pred_db.csv")
+nn.write_gradients_to_csv(w_name="pred_dw.csv",b_name="pred_db.csv")
 
 '''
 Testing for W1 and b1 as in the instructions
 '''
 # Load weights and biases with headers for each layer
 weights_df = pd.read_csv('Task_1/b/w-100-40-4.csv', header=None)
-biases_df = pd.read_csv('Task_1/b/w-100-40-4.csv', header=None)
+biases_df = pd.read_csv('Task_1/b/b-100-40-4.csv', header=None)
 
 # Running for a single step (learning rate do not matter for Task1)
-nn = assign_custom_weights(weights_df,biases_df)
+nn.assign_custom_weights(
+    weights_df=weights_df,
+    biases_df=biases_df
+    )
 _ = nn.step(X=x,Y=y,learning_rate=0.01)
 
 # Saving the results to csv files
@@ -213,10 +218,13 @@ x_test = pd.read_csv('Task_2/x_test.csv',header=None).to_numpy(dtype=np.float32)
 y_test = pd.read_csv('Task_2/y_test.csv',header=None).to_numpy()
 y_test = one_hot_encode(y_test).astype(np.float32)
 
-nn = NeuralNetwork()
-costs = nn.train(
-    X_train=x_train,
-    Y_train=y_train,
-    iteration=1000,
-    learning_rate=0.1,
-    )
+iterations = 1000
+learning_rates = [1,0.1,0.01]
+for learning_rate in learning_rates:
+    nn = NeuralNetwork()
+    costs = nn.train(
+        X_train=x_train,
+        Y_train=y_train,
+        iteration=1000,
+        learning_rate=0.1,
+        )
