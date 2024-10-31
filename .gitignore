@@ -1,1 +1,5 @@
-*ipynb
+*.ipynb
+cost_results.xlsx
+db.csv
+dw.csv
+Final_Submission/*

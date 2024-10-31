@@ -38,7 +38,7 @@ def one_hot_encode(y, num_classes=4):
 class NeuralNetwork:
     def __init__(self, input_size=14, hidden_size1=100, hidden_size2=40, output_size=4):
         # Setting the seed for reproducibility
-        np.random.seed(42)
+        np.random.seed(341)
         # Initializing weights and biases
         self.w1 = np.random.randn(input_size, hidden_size1).astype(np.float32)
         self.b1 = np.zeros((1, hidden_size1), dtype=np.float32)
@@ -187,7 +187,7 @@ nn.assign_custom_weights(
 _ = nn.step(X=x,Y=y,learning_rate=0.01)
 
 # Saving the results to csv files
-nn.write_gradients_to_csv(w_name="pred_dw.csv",b_name="pred_db.csv")
+# nn.write_gradients_to_csv(w_name="pred_dw.csv",b_name="pred_db.csv")
 
 '''
 Testing for W1 and b1 as in the instructions
@@ -218,13 +218,26 @@ x_test = pd.read_csv('Task_2/x_test.csv',header=None).to_numpy(dtype=np.float32)
 y_test = pd.read_csv('Task_2/y_test.csv',header=None).to_numpy()
 y_test = one_hot_encode(y_test).astype(np.float32)
 
+# exucuting as per given learning rates
 iterations = 1000
 learning_rates = [1,0.1,0.01]
+costs_list = []
 for learning_rate in learning_rates:
     nn = NeuralNetwork()
     costs = nn.train(
         X_train=x_train,
         Y_train=y_train,
-        iteration=1000,
-        learning_rate=0.1,
+        iteration=iterations,
+        learning_rate=learning_rate,
         )
+    costs_list.append(costs)
+
+# saving the results to a excel file
+iterations = list(range(1,iterations+1))
+df = pd.DataFrame({
+    'Iteration': iterations,
+    'lr_1': costs_list[0],
+    'lr_0.1': costs_list[1],
+    'lr_0.01': costs_list[2]
+    })
+df.to_excel('cost_results.xlsx', index=False)
