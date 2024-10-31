@@ -1,5 +1,6 @@
 *.ipynb
-cost_results.xlsx
+*.xlsx
 db.csv
 dw.csv
 Final_Submission/*
+cost_results.csv

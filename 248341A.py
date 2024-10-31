@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 import csv
 
 # ReLU Activation function
@@ -139,23 +140,32 @@ class NeuralNetwork:
             for i in self.dw3:
                 writer.writerow(i.flatten())
     
+    # Predict for testing
+    def predict(self,X,Y):
+        y_pred = self.forward(X=X)
+        loss = cross_entropy_loss(Y, y_pred)
+        return loss
+    
     # Train the function for a given iteration and using a given learning rate
-    def train(self,X_train,Y_train,iteration : int, learning_rate: float):
-        costs = []
+    def train(self,X_train,Y_train,X_test,Y_test,iteration : int, learning_rate: float):
+        training_costs = []
+        testing_costs = []
         for i in range(iteration):
-            loss = self.step(
+            # training cost
+            train_cost = self.step(
                 X=X_train,
                 Y=Y_train,
                 learning_rate=learning_rate
                 )
-            print(f"For iteration {i+1} the loss is {loss}")
-            costs.append(loss)
-        return costs
-    
-    # Predict (sake of completeness)
-    def predict(self,X_train):
-        y_pred = self.forward(X=X_train)
-        return np.argmax(y_pred, axis=1)
+            # testing cost
+            test_cost = self.predict(
+                X=X_test,
+                Y=Y_test
+            )
+            training_costs.append(train_cost)
+            testing_costs.append(test_cost)
+            print(f"For iteration {i+1} the training loss is {train_cost} and testing cost is {test_cost}")
+        return training_costs, testing_costs
 
 '''
 Task_1
@@ -209,35 +219,105 @@ nn.write_gradients_to_csv(w_name="dw.csv",b_name="db.csv")
 '''
 Task_2
 '''
-# Train dataset
-x_train = pd.read_csv('Task_2/x_train.csv',header=None).to_numpy(dtype=np.float32)
-y_train = pd.read_csv('Task_2/y_train.csv',header=None).to_numpy()
-y_train = one_hot_encode(y_train).astype(np.float32)
-# Test dataset
-x_test = pd.read_csv('Task_2/x_test.csv',header=None).to_numpy(dtype=np.float32)
-y_test = pd.read_csv('Task_2/y_test.csv',header=None).to_numpy()
-y_test = one_hot_encode(y_test).astype(np.float32)
-
 # exucuting as per given learning rates
-iterations = 1000
-learning_rates = [1,0.1,0.01]
-costs_list = []
-for learning_rate in learning_rates:
-    nn = NeuralNetwork()
-    costs = nn.train(
-        X_train=x_train,
-        Y_train=y_train,
-        iteration=iterations,
-        learning_rate=learning_rate,
-        )
-    costs_list.append(costs)
+isTrain = False
+if isTrain:
+    # Train dataset
+    x_train = pd.read_csv('Task_2/x_train.csv',header=None).to_numpy(dtype=np.float32)
+    y_train = pd.read_csv('Task_2/y_train.csv',header=None).to_numpy()
+    y_train = one_hot_encode(y_train).astype(np.float32)
+    # Test dataset
+    x_test = pd.read_csv('Task_2/x_test.csv',header=None).to_numpy(dtype=np.float32)
+    y_test = pd.read_csv('Task_2/y_test.csv',header=None).to_numpy()
+    y_test = one_hot_encode(y_test).astype(np.float32)
+    
+    iterations = 10000
+    learning_rates = [1,0.1,0.001]
+    train_costs_list = []
+    test_costs_list = []
+    for learning_rate in learning_rates:
+        nn = NeuralNetwork()
+        train_costs, test_costs = nn.train(
+            X_train=x_train,
+            Y_train=y_train,
+            X_test=x_test,
+            Y_test=y_test,
+            iteration=iterations,
+            learning_rate=learning_rate,
+            )
+        train_costs_list.append(train_costs)
+        test_costs_list.append(test_costs)
 
-# saving the results to a excel file
-iterations = list(range(1,iterations+1))
-df = pd.DataFrame({
-    'Iteration': iterations,
-    'lr_1': costs_list[0],
-    'lr_0.1': costs_list[1],
-    'lr_0.01': costs_list[2]
-    })
-df.to_excel('cost_results.xlsx', index=False)
+    # saving the results to a excel file
+    iterations = list(range(1,iterations+1))
+    df = pd.DataFrame({
+        'iteration': iterations,
+        'lr_1_train': train_costs_list[0],
+        'lr_0.1_train': train_costs_list[1],
+        'lr_0.001_train': train_costs_list[2],
+        'lr_1_test': test_costs_list[0],
+        'lr_0.1_test': test_costs_list[1],
+        'lr_0.001_test': test_costs_list[2],
+        })
+    df.to_csv('cost_results.csv', index=False)
+
+# plot charts (when df is created)
+isPlot = True
+if isPlot:
+    df = pd.read_csv('cost_results.csv')
+    # plotting for training costs vs iterations
+    plt.figure(figsize=(10, 6))
+    plt.scatter(df['iteration'], df['lr_1_train'], label='learning rate : 1', color='b',s=10)
+    plt.scatter(df['iteration'], df['lr_0.1_train'], label='learning rate : 0.1', color='g',s=10)
+    plt.scatter(df['iteration'], df['lr_0.001_train'], label='learning rate : 0.001', color='r',s=10)
+
+    plt.xlabel('Iteration')
+    plt.ylabel('Cost')
+    plt.title('Training Costs vs Iterations')
+    plt.legend()
+    plt.show()
+
+    # plotting for testing costs vs iterations
+    plt.figure(figsize=(10, 6))
+    plt.scatter(df['iteration'], df['lr_1_test'], label='learning rate : 1', color='b',s=10)
+    plt.scatter(df['iteration'], df['lr_0.1_test'], label='learning rate : 0.1', color='g',s=10)
+    plt.scatter(df['iteration'], df['lr_0.001_test'], label='learning rate : 0.001', color='r',s=10)
+
+    plt.xlabel('Iteration')
+    plt.ylabel('Cost')
+    plt.title('Testing Costs vs Iterations')
+    plt.legend()
+    plt.show()
+    
+    # plotting for testing & training costs vs iterations for learning rate 1 
+    plt.figure(figsize=(10, 6))
+    plt.scatter(df['iteration'], df['lr_1_train'], label='training costs', color='r',s=10)
+    plt.scatter(df['iteration'], df['lr_1_test'], label='testing costs', color='g',s=10)
+
+    plt.xlabel('Iteration')
+    plt.ylabel('Cost')
+    plt.title('Training and Testing Costs vs Iterations for Learning Rate 1')
+    plt.legend()
+    plt.show()
+    
+    # plotting for testing & training costs vs iterations for learning rate 0.1
+    plt.figure(figsize=(10, 6))
+    plt.scatter(df['iteration'], df['lr_0.1_train'], label='training costs', color='r',s=10)
+    plt.scatter(df['iteration'], df['lr_0.1_test'], label='testing costs', color='g',s=10)
+
+    plt.xlabel('Iteration')
+    plt.ylabel('Cost')
+    plt.title('Training and Testing Costs vs Iterations for Learning Rate 0.1')
+    plt.legend()
+    plt.show()
+    
+    # plotting for testing & training costs vs iterations for learning rate 0.001
+    plt.figure(figsize=(10, 6))
+    plt.scatter(df['iteration'], df['lr_0.001_train'], label='training costs', color='r',s=10)
+    plt.scatter(df['iteration'], df['lr_0.001_test'], label='testing costs', color='g',s=10)
+
+    plt.xlabel('Iteration')
+    plt.ylabel('Cost')
+    plt.title('Training and Testing Costs vs Iterations for Learning Rate 0.001')
+    plt.legend()
+    plt.show()
