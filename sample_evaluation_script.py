@@ -9,8 +9,8 @@ import zipfile
 # zip_ref.close()
 
 truth_path = '' #change truth_path = 'b' for verification
-file_name = ['dw.csv', 'db.csv']
-# file_name = ['pred_dw.csv', 'pred_db.csv']
+# file_name = ['dw.csv', 'db.csv']
+file_name = ['pred_dw.csv', 'pred_db.csv']
 true_file = ['Task_1/a/true-dw.csv', 'Task_1/a/true-db.csv']
 threshold = 0.05
 

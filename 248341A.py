@@ -261,8 +261,8 @@ if isTrain:
         })
     df.to_csv('cost_results.csv', index=False)
 
-# plot charts (when df is created)
-isPlot = True
+# plot charts (imprtant: works only when above df is created)
+isPlot = False
 if isPlot:
     df = pd.read_csv('cost_results.csv')
     # plotting for training costs vs iterations
